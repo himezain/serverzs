@@ -1,0 +1,39 @@
+--Created a query that outputs data from multiple tables
+--Enriched data using several subqueries/methods to provide more "human" touch
+
+SELECT 
+	oms_order_date,
+	client_web_order_number,
+	upc,
+	SUBSTRING(upc,1,6) AS item_code,
+		CASE
+			WHEN SUBSTRING(upc,15,3) = '001' THEN 'XXS'
+			WHEN SUBSTRING(upc,15,3) = '002' THEN 'XS'
+			WHEN SUBSTRING(upc,15,3) = '003' THEN 'S'
+			WHEN SUBSTRING(upc,15,3) = '004' THEN 'M'
+			WHEN SUBSTRING(upc,15,3) = '005' THEN 'L'
+			WHEN SUBSTRING(upc,15,3) = '006' THEN 'XL'
+			WHEN SUBSTRING(upc,15,3) = '007' THEN 'XXL'
+			WHEN SUBSTRING(upc,15,3) = '008' THEN '3XL'
+			WHEN SUBSTRING(upc,15,3) = '999' THEN 'Other'
+			WHEN SUBSTRING(upc,15,3) = '027' THEN 'Socks'
+			ELSE 'CODE NOT FOUND'
+		END AS size,
+	item_description_1,
+	quantity_ordered,
+	(quantity_ordered * unit_price_amount) AS purchase_revenue,
+	(SELECT city FROM zip_master_zs WHERE zip_master_zs.zip = SUBSTRING(l_dmw_order_report.shipping_postal_code,1,5)) AS city,
+	(SELECT state FROM zip_master_zs WHERE zip_master_zs.zip = SUBSTRING(l_dmw_order_report.shipping_postal_code,1,5)) AS state,
+	*
+FROM 
+	mdwh.us_raw.l_dmw_order_report
+WHERE 
+	quantity_ordered > 0
+	AND UPPER(line_status) NOT IN ('','RETURN', 'CANCELLED')
+	AND UPPER(item_description_1) NOT IN ('','FREIGHT')
+	AND (quantity_ordered * unit_price_amount) > 0
+	AND oms_order_date BETWEEN '2019-08-01' AND '2019-08-31'
+	AND UPPER(item_description_1) LIKE '%ROGER%'
+ORDER BY 
+	oms_order_date,
+	client_web_order_number
