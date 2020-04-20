@@ -12,6 +12,5 @@ WHERE
 	AND extended_amount < 1000 --NO BULK ORDERS
 	AND oms_order_date BETWEEN '2020-01-01' AND '2020-01-31'
 	AND SUBSTRING(upc,1,6) IN (SELECT item_code FROM item_master_zs WHERE new_division BETWEEN '11' AND '39')
---GROUP BY
---	customer_id,
---	extended_amount
+GROUP BY
+	customer_id
